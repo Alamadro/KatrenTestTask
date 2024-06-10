@@ -5,8 +5,8 @@ namespace TestTask
 {
     public class ReadOnlyStream : IReadOnlyStream
     {
-        private Stream _localStream;
-
+        //private Stream _localStream;
+        private readonly StreamReader _localStreamReader;
         /// <summary>
         /// Конструктор класса. 
         /// Т.к. происходит прямая работа с файлом, необходимо 
@@ -15,10 +15,17 @@ namespace TestTask
         /// <param name="fileFullPath">Полный путь до файла для чтения</param>
         public ReadOnlyStream(string fileFullPath)
         {
-            IsEof = true;
+            //IsEof = false;
 
             // TODO : Заменить на создание реального стрима для чтения файла!
-            _localStream = null;
+            try
+            {
+                _localStreamReader = new StreamReader(fileFullPath);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
                 
         /// <summary>
@@ -26,8 +33,12 @@ namespace TestTask
         /// </summary>
         public bool IsEof
         {
-            get; // TODO : Заполнять данный флаг при достижении конца файла/стрима при чтении
-            private set;
+            get => _localStreamReader == null || _localStreamReader.EndOfStream;// TODO : Заполнять данный флаг при достижении конца файла/стрима при чтении
+        }
+
+        public void Close()
+        {
+            _localStreamReader?.Close();
         }
 
         /// <summary>
@@ -39,7 +50,11 @@ namespace TestTask
         public char ReadNextChar()
         {
             // TODO : Необходимо считать очередной символ из _localStream
-            throw new NotImplementedException();
+            if(!IsEof)
+            {
+                return (char)_localStreamReader.Read();
+            }
+            return '\0';
         }
 
         /// <summary>
@@ -47,14 +62,11 @@ namespace TestTask
         /// </summary>
         public void ResetPositionToStart()
         {
-            if (_localStream == null)
+            if (_localStreamReader == null)
             {
-                IsEof = true;
                 return;
             }
-
-            _localStream.Position = 0;
-            IsEof = false;
+            _localStreamReader.BaseStream.Position = 0;
         }
     }
 }
